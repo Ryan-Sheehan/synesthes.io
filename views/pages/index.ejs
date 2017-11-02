@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <% include ../partials/header.ejs %>
+  </head>
+  <body>
+    <% include ../partials/nav.ejs %>
+    <div class="container-fluid">
+      <div class="container_flex">
+        <div class="row">
+          <div class="col-md-5 col-xs-12" id="leftColumn">
+            <button id="play">Play</button>
+            <button id="pause" style="display:none">Pause</button>
+            <div class="container-wave">
+              <div class="coast">
+                <div class="wave-rel-wrap">
+                  <div class="wave"></div>
+                </div>
+              </div>
+              <div class="coast delay">
+                <div class="wave-rel-wrap">
+                  <div class="wave delay"></div>
+                </div>
+              </div>
+              <div class="text text-w">w</div>
+              <div class="text text-a">a</div>
+              <div class="text text-v">v</div>
+              <div class="text text-e">e</div>
+            </div>
+          </div>
+          <div class="col-md-7 col-xs-12" id="rightColumn">
+            <img id="image-id" src="/vendor/images/background.jpg"/>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <script>
+
+    var synth = new Tone.Synth({
+    "oscillator" : {
+    "type" : "pwm",
+    "modulationFrequency" : 0.6
+    },
+    "envelope" : {
+    "attack" : 0.9,
+    "decay" : 0.1,
+    "sustain" : 0.2,
+    "release" : 0.1,
+    }
+    }).toMaster();
+
+    //a 4 voice Synth
+    var polySynth = new Tone.PolySynth(4, Tone.Synth).toMaster();
+
+    var synth = new Tone.Synth({
+      "oscillator" : {
+        "type" : "pwm",
+        "modulationFrequency" : 0.2
+      },
+      "envelope" : {
+        "attack" : 0.02,
+        "decay" : 0.1,
+        "sustain" : 0.2,
+        "release" : 0.9,
+      }
+    }).toMaster();
+    
+    var rgb_stream = [];
+    Caman('#image-id', function () {
+      this.resize({
+        width: 400,
+        height: 400
+      }).render();
+    canvas = document.getElementById('image-id');
+    
+    getRGB(canvas);
+    });
+
+    function getRGB(canvas) {
+      for (var y = 0; y < canvas.height; y+=20) {
+        for (var x = 0; x < canvas.width; x+=20) {
+          var pixelData = canvas.getContext('2d').getImageData(x, y, 1, 1).data;
+
+          if(pixelData[0] > pixelData[1] && pixelData[0] > pixelData[2]){
+              polySynth.triggerAttackRelease(["C4", "E4", "G4", "B4"], "2n");
+          }
+          else if(pixelData[1] > pixelData[0] && pixelData[1] > pixelData[2]){
+            var osc = new Tone.OmniOscillator();
+            osc.frequency.value = "C4";
+            osc.start().stop("+8n");
+          }
+          else {
+            var pingPong = new Tone.PingPongDelay("4n", 0.2).toMaster();
+            simpleSynth.triggerAttackRelease("C4", "32n");
+          }
+
+
+          rgb_stream.push([pixelData[0],pixelData[1],pixelData[2]]);
+        }
+      }
+    }
+    console.log(rgb_stream);
+
+    $(document).ready(function() {
+      // Transport buttons
+      $("#play").click(function() {
+      Tone.Transport.start();
+      $(this).hide();
+      $("#pause").show();
+      });
+      $("#pause").click(function() {
+      Tone.Transport.pause();
+      $(this).hide();
+      $("#play").show();
+      });
+    });
+
+    </script>
+  </body>
+</html>
